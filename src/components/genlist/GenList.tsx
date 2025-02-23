@@ -45,70 +45,140 @@ const toolObject: Tool[] = [
   {
     functionDeclarations: [
       {
-        name: "look_at_lists",
-        description:
-          "Returns all current lists. Called immediately before calling `edit_list`, to ensure latest version is being edited.",
+        "name": "get_document_fields",
+        "description": "Returns current values of document fields.  Called immediately before calling `set_recited_fields`, to ensure latest version is being set.",
+        "parameters": {
+          "type": SchemaType.OBJECT,
+          "properties": {
+            "fields": {
+              "type": SchemaType.ARRAY,
+              "items": {
+                "type": SchemaType.STRING,
+                "enum": [
+                  "issuer",
+                  "pids",
+                  "date",
+                  "party_names",
+                  "tax_paid_year",
+                  "orders_passed",
+                  "conversion_purpose",
+                  "boundaries",
+                  "CD_no"
+                ]
+              }
+            }
+          }
+        }
       },
       {
-        name: "edit_list",
-        description:
-          "Edits list with specified id. Requires `id`, `heading`, and `list_array`. You must provide the complete new list array. May be called multiple times, once for each list requiring edit.",
-        parameters: {
-          type: SchemaType.OBJECT,
-          properties: {
-            id: {
-              type: SchemaType.STRING,
-            },
-            heading: {
-              type: SchemaType.STRING,
-            },
-            list_array: {
-              type: SchemaType.ARRAY,
-              items: {
-                type: SchemaType.STRING,
-              },
-            },
+        "name": "set_recited_fields",
+        "description": "Records multiple field values that user has recited. User may recite one or many fields like 'issuer is BDA and pids are 123,456'",
+        "parameters": {
+          "type": SchemaType.OBJECT,
+          "properties": {
+            "recited_values": {
+              "type": SchemaType.OBJECT,
+              "properties": {
+                "issuer": {
+                  "type": SchemaType.STRING
+                },
+                "pids": {
+                  "type": SchemaType.STRING
+                },
+                "date": {
+                  "type": SchemaType.STRING
+                },
+                "party_names": {
+                  "type": SchemaType.STRING
+                },
+                "tax_paid_year": {
+                  "type": SchemaType.STRING
+                },
+                "orders_passed": {
+                  "type": SchemaType.STRING
+                },
+                "conversion_purpose": {
+                  "type": SchemaType.STRING
+                },
+                "boundaries": {
+                  "type": SchemaType.STRING
+                },
+                "CD_no": {
+                  "type": SchemaType.STRING
+                }
+              }
+            }
           },
-          required: ["id", "heading", "list_array"],
-        },
+          "required": [
+            "recited_values"
+          ]
+        }
       },
-      {
-        name: "remove_list",
-        description:
-          "Removes the list with specified id. Requires `id`. May be called multiple times, once for each list you want to remove.",
-        parameters: {
-          type: SchemaType.OBJECT,
-          properties: {
-            id: {
-              type: SchemaType.STRING,
-            },
-          },
-          required: ["id"],
-        },
-      },
-      {
-        name: "create_list",
-        description:
-          "Creates new list. Requires `id`, `heading`, and `list_array`. May be called multiple times, once for each list you want to create.",
-        parameters: {
-          type: SchemaType.OBJECT,
-          properties: {
-            id: {
-              type: SchemaType.STRING,
-            },
-            heading: {
-              type: SchemaType.STRING,
-            },
-            list_array: {
-              type: SchemaType.ARRAY,
-              items: {
-                type: SchemaType.STRING,
-              },
-            },
-          },
-          required: ["id", "heading", "list_array"],
-        },
-      },
+      // {
+      //   name: "look_at_lists",
+      //   description:
+      //     "Returns all current lists. Called immediately before calling `edit_list`, to ensure latest version is being edited.",
+      // },
+      // {
+      //   name: "edit_list",
+      //   description:
+      //     "Edits list with specified id. Requires `id`, `heading`, and `list_array`. You must provide the complete new list array. May be called multiple times, once for each list requiring edit.",
+      //   parameters: {
+      //     type: SchemaType.OBJECT,
+      //     properties: {
+      //       id: {
+      //         type: SchemaType.STRING,
+      //       },
+      //       heading: {
+      //         type: SchemaType.STRING,
+      //       },
+      //       list_array: {
+      //         type: SchemaType.ARRAY,
+      //         items: {
+      //           type: SchemaType.STRING,
+      //         },
+      //       },
+      //     },
+      //     required: ["id", "heading", "list_array"],
+      //   },
+      // },
+      // {
+      //   name: "remove_list",
+      //   description:
+      //     "Removes the list with specified id. Requires `id`. May be called multiple times, once for each list you want to remove.",
+      //   parameters: {
+      //     type: SchemaType.OBJECT,
+      //     properties: {
+      //       id: {
+      //         type: SchemaType.STRING,
+      //       },
+      //     },
+      //     required: ["id"],
+      //   },
+      // },
+      // {
+      //   name: "create_list",
+      //   description:
+      //     "Creates new list. Requires `id`, `heading`, and `list_array`. May be called multiple times, once for each list you want to create.",
+      //   parameters: {
+      //     type: SchemaType.OBJECT,
+      //     properties: {
+      //       id: {
+      //         type: SchemaType.STRING,
+      //       },
+      //       heading: {
+      //         type: SchemaType.STRING,
+      //       },
+      //       list_array: {
+      //         type: SchemaType.ARRAY,
+      //         items: {
+      //           type: SchemaType.STRING,
+      //         },
+      //       },
+      //     },
+      //     required: ["id", "heading", "list_array"],
+      //   },
+      // },
     ],
   },
 ];
@@ -116,24 +186,31 @@ const toolObject: Tool[] = [
 const systemInstructionObject = {
   parts: [
     {
-      text: `In this conversation you will help the user with making a checklist or multiple checklists. Use the tools provided to fulfil requests to help create and modify lists. Always call any relevant tools *before* speaking. 
+      text: `You are a smart dictation assistant for legal document data entry. Your role is to accurately capture and update document fields as users dictate them.
+      # Document Template Fields: issuer, pids, date, party_names, tax_paid_year, orders_passed, conversion_purpose, boundaries, CD_no
 
-# Checklist guidance:
-- Give each list an appropriate title with emoji (eg. "🎬 My Favorite Movies")
-- Give each list an id for identification (eg. "favorite-movies")
-- Give list items as an array of markdown-formatted strings
-- Use extended markdown for checkboxes: "- [ ] unchecked item" and "- [x] checked item"
-- Help me by checking off items when requested
-- Add headings eg. "## Heading" when requested to sort/organise/structure lists
-- Bias towards creating new lists for new topics
-- If I don't specify what to put on the list, let me know you've added some examples
-- Use existing examples, if any, as a reference for your new list
-- Do not return the list in your conversational response, only via tools
-- There is no need to ask if there is anything else you can help with
-- Combine lists by removing relevant existing lists and creating a new one when requested
-- Note that the user can also check off and reorder items using the UI
-
-The user will now start the conversation, probably by asking you to "start a list about: {my request}". Create the checklist for the user, then you two can co-create checklists together. Speak as helpfully and concisely as possible. Always call any relevant tools *before* speaking.`,
+      # Core Behaviors:
+      1. Direct Dictation Mode:
+      - Listen for field-value pairs in user's speech
+      - Capture exact values as dictated
+      - Example: "issuer is Bangalore Development Authority"
+        → set_recited_fields({"issuer": "Bangalore Development Authority"})
+          
+      2. Smart Update Mode:
+      - Activate when user indicates modifications to existing data
+      - Triggers: "change", "correct", "update", "add to", "fix"
+      - First fetch current value using get_document_fields
+      - Then apply the specified changes
+      - Example: "change BDA to Bangalore Development Authority in issuer"
+        1. get_document_fields(["issuer"])
+        2. set_recited_fields with updated value
+          
+      3. Multi-Field Capture:
+      - Process multiple fields in single dictation
+      - Example: "pids are Site 123 Block A and date is March 15 2024"
+        → set_recited_fields({"pids": "Site 123 Block A", "date": "March 15 2024"})
+          
+      Process all inputs silently - no conversational responses needed. Focus on accurate data capture and smart field updates.`,
     },
   ],
 };
@@ -189,6 +266,24 @@ function GenListComponent() {
   const [initialMessage, setInitialMessage] = useState("");
   const [listsState, setListsState] = useState<ListProps[]>([]);
   const [toolResponse, setToolResponse] = useState<ToolResponse | null>(null);
+  const [data, setData] = useState<any>({
+    issuer: "",
+    pids: "",
+    date: "",
+    party_names: "",
+    tax_paid_year: "",
+    orders_passed: "",
+    conversion_purpose: "",
+    boundaries: "",
+    CD_no: ""
+  });
+
+  const handleChange = (e:any, key:any) => {
+    setData({
+      ...data,
+      [key]: e.target.value
+    });
+  };
 
   // Update existing list
   const updateList = useCallback((listId: string, updatedList: string[]) => {
@@ -235,6 +330,13 @@ function GenListComponent() {
     );
   }, []);
 
+  const updateData = useCallback((newData: any) => {
+    console.log(newData)
+    setData((prev: any) =>
+      ({ ...prev, ...newData })
+    );
+  },[]);
+
   useEffect(() => {
     const onToolCall = (toolCall: ToolCall) => {
       const fCalls = toolCall.functionCalls;
@@ -250,6 +352,14 @@ function GenListComponent() {
             },
           };
           switch (fCall.name) {
+            case "get_document_fields": {
+              break;
+            }
+            case "set_recited_fields": {
+              const args = fCall.args as any;
+              updateData(args.recited_values);
+              break;
+            }
             case "look_at_lists": {
               break;
             }
@@ -405,9 +515,62 @@ function GenListComponent() {
     );
   };
 
+  useEffect(() => {
+    console.log(data)
+  }, [data])
+
   return (
     <div className="app">
-      {listsState.length === 0 ? renderInitialScreen() : renderListScreen()}
+      {/* {listsState.length === 0 ? renderInitialScreen() : renderListScreen()} */}
+      <table style={{
+          width: '100%',
+          // borderCollapse: 'collapse',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+        }}>
+        <thead>
+          <tr>
+            <th style={{
+                backgroundColor: '#f4f4f9',
+                padding: '12px',
+                textAlign: 'left',
+                fontWeight: '600',
+                borderBottom: '2px solid #ddd',
+                 color: "black",
+                 width: "20%"
+              }}>Key</th>
+            <th style={{
+                backgroundColor: '#f4f4f9',
+                padding: '12px',
+                textAlign: 'left',
+                fontWeight: '600',
+                borderBottom: '2px solid #ddd',
+                color: "black"
+              }}>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.keys(data).map((key) => (
+            <tr key={key}>
+              <td style={{
+                  padding: '12px',
+                  borderBottom: '1px solid #ddd',
+                  fontWeight: '500',
+                  backgroundColor: '#fafafa',
+                  color: "black",
+                  textAlign: "left"
+                }}>{key}</td>
+              <td style={{
+                  padding: '12px',
+                  borderBottom: '1px solid #ddd',
+                  backgroundColor: '#fafafa',
+                  color: "black"
+                }}>
+                {data[key]}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
